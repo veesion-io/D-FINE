@@ -63,19 +63,6 @@ def process_video(video_path, output_path):
 import pickle
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Custom Object Tracker")
-    parser.add_argument(
-        "-c", "--config", type=str, required=True, help="Path to YAML config"
-    )
-    parser.add_argument(
-        "-r", "--resume", type=str, required=True, help="Path to model checkpoint"
-    )
-    parser.add_argument(
-        "--device", type=str, default="cuda:0", help="Device (cpu/cuda)"
-    )
-
-    args = parser.parse_args()
-
     # Process all videos
     for video_file in os.listdir(VIDEOS_DIR):
         if not video_file.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):
@@ -87,6 +74,6 @@ if __name__ == "__main__":
         output_path = os.path.join(OUTPUT_DIR, f"{os.path.splitext(video_file)[0]}.pkl")
 
         print(f"Processing {video_file}...")
-        process_video(video_path, output_path, args.device)
+        process_video(video_path, output_path)
 
     print("All videos processed.")
