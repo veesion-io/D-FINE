@@ -1,12 +1,6 @@
 import argparse
-import torch
-import torch.nn as nn
-import numpy as np
 import cv2
 import os
-from PIL import Image
-from types import SimpleNamespace
-from src.core import YAMLConfig  # Your custom config loader
 from ultralytics import YOLO
 
 # Paths
