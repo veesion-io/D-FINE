@@ -148,7 +148,6 @@ def process_video(model, video_path, output_path, device="cuda:0", conf_thresh=0
                     float(conf),  # Confidence
                     int(cls),
                 )
-            print(frame_id, list(frame_tracks))
             tracking_data[frame_id] = frame_tracks
         frame_id += 1
 
@@ -184,8 +183,6 @@ if __name__ == "__main__":
     for video_file in os.listdir(VIDEOS_DIR):
         if not video_file.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):
             continue  # Skip non-video files
-        # if "1f9ff" not in video_file:
-        #     continue
 
         video_path = os.path.join(VIDEOS_DIR, video_file)
         output_path = os.path.join(OUTPUT_DIR, f"{os.path.splitext(video_file)[0]}.pkl")
