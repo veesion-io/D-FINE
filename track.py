@@ -66,10 +66,15 @@ class DetectionResults:
     """Ensure BYTETracker gets correctly formatted detections"""
 
     def __init__(self, detections):
-        xyxy = detections[:, :4]
-        self.xywh = self.xyxy_to_xywh(xyxy)
-        self.conf = detections[:, 4]
-        self.cls = detections[:, 5]
+        if not len(detections):
+            self.xywh = np.zeros((0, 4))
+            self.conf = np.array([])
+            self.cls = np.array([])
+        else:
+            xyxy = detections[:, :4]
+            self.xywh = self.xyxy_to_xywh(xyxy)
+            self.conf = detections[:, 4]
+            self.cls = detections[:, 5]
 
     @staticmethod
     def xyxy_to_xywh(xyxy):
