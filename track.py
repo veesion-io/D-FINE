@@ -66,10 +66,15 @@ class DetectionResults:
     """Ensure BYTETracker gets correctly formatted detections"""
 
     def __init__(self, detections):
-        xyxy = detections[:, :4]
-        self.xywh = self.xyxy_to_xywh(xyxy)
-        self.conf = detections[:, 4]
-        self.cls = detections[:, 5]
+        if not len(detections):
+            self.xywh = np.zeros((0, 4))
+            self.conf = np.array([])
+            self.cls = np.array([])
+        else:
+            xyxy = detections[:, :4]
+            self.xywh = self.xyxy_to_xywh(xyxy)
+            self.conf = detections[:, 4]
+            self.cls = detections[:, 5]
 
     @staticmethod
     def xyxy_to_xywh(xyxy):
@@ -135,19 +140,19 @@ def process_video(model, video_path, output_path, device="cuda:0", conf_thresh=0
 
         detections = np.array(detections, dtype=np.float32)
 
-        if detections.shape[0] > 0:
-            structured_detections = DetectionResults(detections)
-            tracked_objects = tracker.update(structured_detections)
+        structured_detections = DetectionResults(detections)
+        tracked_objects = tracker.update(structured_detections)
 
-            # Store tracking results
-            frame_tracks = {}
-            for track in tracked_objects:
-                x1, y1, x2, y2, track_id, conf, cls, _ = track
-                frame_tracks[int(track_id)] = (
-                    [x1, y1, x2, y2],  # Bounding box
-                    float(conf),  # Confidence
-                    int(cls),
-                )
+        # Store tracking results
+        frame_tracks = {}
+        for track in tracked_objects:
+            x1, y1, x2, y2, track_id, conf, cls, _ = track
+            frame_tracks[int(track_id)] = (
+                [x1, y1, x2, y2],  # Bounding box
+                float(conf),  # Confidence
+                int(cls),
+            )
+        if len(frame_tracks):
             tracking_data[frame_id] = frame_tracks
         frame_id += 1
 
