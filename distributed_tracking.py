@@ -183,11 +183,9 @@ def list_s3_videos(s3_client, bucket, prefix):
     ]
 
 
-def download_video_from_s3(s3_client, bucket, prefix, video_name):
+def download_video_from_s3(s3_client, bucket, video_s3_path):
     """Download a video file from S3 into a BytesIO buffer."""
-    video_data = s3_client.get_object(
-        Bucket=bucket, Key=os.path.join(prefix, video_name)
-    )["Body"].read()
+    video_data = s3_client.get_object(Bucket=bucket, Key=video_s3_path)["Body"].read()
     return BytesIO(video_data)
 
 
@@ -199,11 +197,9 @@ def upload_results_to_s3(s3_client, bucket, output_key, data):
     s3_client.put_object(Bucket=bucket, Key=output_key, Body=output_buffer.getvalue())
 
 
-def process_videos(
-    s3_client, model, bucket, prefix, output_prefix, rank, world_size, device
-):
+def process_videos(s3_client, model, bucket, output_prefix, rank, world_size, device):
     """Process a subset of videos assigned to this worker."""
-    with open("test_dataset.json", "r") as f:
+    with open("val_2025-02-01_to_2025-02-28_100.json", "r") as f:
         dataset = json.load(f)
 
     videos_names = sorted(list(dataset))
@@ -230,7 +226,8 @@ def process_videos(
             pass  # File doesn't exist, proceed with processing
 
         # Download and process video
-        video_path = download_video_from_s3(s3_client, bucket, prefix, video_name)
+        video_s3_path = dataset[video_name]["cloud_url"]
+        video_path = download_video_from_s3(s3_client, bucket, video_s3_path)
         tracking_data = process_video(model, video_path, None, device)
 
         # Upload results
@@ -254,9 +251,6 @@ if __name__ == "__main__":
     )
     parser.add_argument("--s3-bucket", type=str, required=True, help="S3 bucket name")
     parser.add_argument(
-        "--s3-prefix", type=str, required=True, help="S3 input prefix (directory)"
-    )
-    parser.add_argument(
         "--s3-output-prefix",
         type=str,
         required=True,
@@ -279,7 +273,6 @@ if __name__ == "__main__":
         s3_client,
         custom_model,
         args.s3_bucket,
-        args.s3_prefix,
         args.s3_output_prefix,
         args.rank,
         args.world_size,
