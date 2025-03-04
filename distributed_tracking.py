@@ -12,9 +12,6 @@ from types import SimpleNamespace
 from src.core import YAMLConfig  # Your custom config loader
 
 # Paths
-VIDEOS_DIR = "/home/veesion/Bag-detector/videos"
-OUTPUT_DIR = "/home/veesion/Bag-detector/tracks"
-os.makedirs(OUTPUT_DIR, exist_ok=True)  # Ensure output directory exists
 
 # Class names from your dataset
 CLASS_NAMES = {
