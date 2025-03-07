@@ -183,10 +183,10 @@ def list_s3_videos(s3_client, bucket, prefix):
     ]
 
 
-def download_video_from_s3(s3_client, bucket, video_s3_path):
+def download_video_from_s3(s3_client, bucket, video_s3_path, local_path):
     """Download a video file from S3 into a BytesIO buffer."""
-    video_data = s3_client.get_object(Bucket=bucket, Key=video_s3_path)["Body"].read()
-    return BytesIO(video_data)
+    s3_client.download_file(bucket, video_s3_path, local_path)
+    return os.path.exists(local_path)
 
 
 def upload_results_to_s3(s3_client, bucket, output_key, data):
@@ -227,8 +227,11 @@ def process_videos(s3_client, model, bucket, output_prefix, rank, world_size, de
 
         # Download and process video
         video_s3_path = dataset[video_name]["cloud_url"]
-        video_path = download_video_from_s3(s3_client, bucket, video_s3_path)
-        tracking_data = process_video(model, video_path, None, device)
+        local_path = f"/tmp/{video_name}"
+        result = download_video_from_s3(s3_client, bucket, video_s3_path, local_path)
+        if not result:
+            continue
+        tracking_data = process_video(model, local_path, None, device)
 
         # Upload results
         upload_results_to_s3(s3_client, bucket, output_key, tracking_data)
