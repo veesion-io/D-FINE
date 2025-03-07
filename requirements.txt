@@ -6,3 +6,5 @@ tensorboard
 scipy
 calflops
 transformers
+opencv-contrib-python
+ultralytics
