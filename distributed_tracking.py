@@ -193,7 +193,9 @@ def upload_results_to_s3(s3_client, bucket, output_key, data):
     s3_client.put_object(Bucket=bucket, Key=output_key, Body=output_buffer.getvalue())
 
 
-def process_videos(s3_client, model, bucket, output_prefix, rank, world_size, device):
+def process_videos(
+    s3_client, model, bucket, s3_output_bucket, output_prefix, rank, world_size, device
+):
     """Process a subset of videos assigned to this worker."""
     with open("val_2025-02-01_to_2025-02-28_100.json", "r") as f:
         dataset = json.load(f)
@@ -216,7 +218,7 @@ def process_videos(s3_client, model, bucket, output_prefix, rank, world_size, de
             f"{output_prefix}/{os.path.splitext(os.path.basename(video_name))[0]}.pkl"
         )
         try:
-            s3_client.head_object(Bucket=bucket, Key=output_key)
+            s3_client.head_object(Bucket=s3_output_bucket, Key=output_key)
             continue  # Skip processing
         except s3_client.exceptions.ClientError:
             pass  # File doesn't exist, proceed with processing
@@ -230,7 +232,7 @@ def process_videos(s3_client, model, bucket, output_prefix, rank, world_size, de
         tracking_data = process_video(model, local_path, device)
 
         # Upload results
-        upload_results_to_s3(s3_client, bucket, output_key, tracking_data)
+        upload_results_to_s3(s3_client, s3_output_bucket, output_key, tracking_data)
 
     print(f"Worker {rank}: Finished processing.")
 
@@ -256,6 +258,12 @@ if __name__ == "__main__":
         help="S3 output prefix (directory)",
     )
     parser.add_argument(
+        "--s3-output-bucket",
+        type=str,
+        required=True,
+        help="S3 output bucket",
+    )
+    parser.add_argument(
         "--rank", type=int, required=True, help="Worker rank (0-based index)"
     )
     parser.add_argument(
@@ -272,6 +280,7 @@ if __name__ == "__main__":
         s3_client,
         custom_model,
         args.s3_bucket,
+        args.s3_output_bucket,
         args.s3_output_prefix,
         args.rank,
         args.world_size,
