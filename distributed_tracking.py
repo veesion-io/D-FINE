@@ -83,7 +83,7 @@ class DetectionResults:
         return xywh
 
 
-def process_video(model, video_path, output_path, device="cuda:0", conf_thresh=0.6):
+def process_video(model, video_path, device="cuda:0", conf_thresh=0.6):
     """Process a single video and save tracking data as JSON"""
     cap = cv2.VideoCapture(video_path)
     fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -155,11 +155,7 @@ def process_video(model, video_path, output_path, device="cuda:0", conf_thresh=0
 
     cap.release()
 
-    # Save tracking data
-    with open(output_path, "wb") as f:
-        pickle.dump(tracking_data, f)
-
-    print(f"Tracking complete. Output saved as {output_path}")
+    return tracking_data
 
 
 import pickle
@@ -231,7 +227,7 @@ def process_videos(s3_client, model, bucket, output_prefix, rank, world_size, de
         result = download_video_from_s3(s3_client, bucket, video_s3_path, local_path)
         if not result:
             continue
-        tracking_data = process_video(model, local_path, None, device)
+        tracking_data = process_video(model, local_path, device)
 
         # Upload results
         upload_results_to_s3(s3_client, bucket, output_key, tracking_data)
