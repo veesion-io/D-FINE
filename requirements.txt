@@ -9,3 +9,4 @@ transformers
 lap
 opencv-contrib-python
 ultralytics
+boto3
